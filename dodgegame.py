@@ -37,3 +37,80 @@ face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
 
 cap = cv2.VideoCapture(0)
 
+def run_game():
+    global player_x
+    block_list = []
+    score = 0
+    clock = pygame.time.Clock()
+    frame_count = 0
+
+    running = True
+    while running:
+        screen.blit(bg_image(0, 0))
+
+        ret,frame = cap.read()
+        if not ret:
+            print("Failed to read from camera")
+            continue
+        frame = cv2.flip(frame, 1)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        if frame_count % 5 == 0:
+            results = face_detection.process(rgb_frame)
+
+            if results.detections:
+                for detection in results.detections:
+                    bbox = detection.location_data.relative_bounding box
+                    face_x = int(bbox.xmin * frame.shape[1])
+                    new_x = int((face_x / frame.shape[1]) * WIDTH)
+
+                    player_x = int(0.5 * player_x + 0.5 * new_x)
+                frame_count += 1
+
+                if random.randint(1, 20) == 1:
+                    block_x = random.randint(0, WIDTH - block_size)
+                    block_list.append([block_x, 0])
+
+                for block in block_list:
+                    block[1] += block_speed
+
+                for block in block_list:
+                    if (player_x < block[0] < player_x + player_size or player_x < block[0] + block_size < player_x + player_size) and \ (player_y < block[1] + block_size < player_y + player_size):
+                        print("Collision detected Game Over.")
+                        return show_game_over_screen(score)
+
+                block_list = [block for block in block_list if block[1] < HEIGHT]
+
+                screen.blit(player_img, (player_x, player_y))
+
+                for block in block_list:
+                    screen.blit(block_img, (block[0], block[1]))
+
+                score += 1
+                score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = cv2.transpose(frame)
+                frame_surface = pygame.surfarray.make_surface(frame)
+
+                frame_surface = pygame.transform.scale(frame_surface, (150, 150))
+                screen.blit(frame_surface, (WIDTH - 160, 10))
+
+                pygame.display.flip()
+                clock.tick(60)
+
+                for event in pygame.event.get():
+                    if event_type == pygame.QUIT:
+                        pygame.quit()
+                        cap.release()
+                        cv2.destroyAllWindows()
+                        exit()
+
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_q]
+                    pygame.quit()
+                    cap.release()
+                    exit()
+
+            print("Game loop ended. Restarting game...")
+            return True
