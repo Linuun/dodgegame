@@ -4,6 +4,7 @@ import cv2
 import mediapipe as mp
 import os
 
+from jax.jaxpr_util import primitives
 from pyrect import WIDTH, HEIGHT
 
 pygame.init()
@@ -114,3 +115,38 @@ def run_game():
 
             print("Game loop ended. Restarting game...")
             return True
+
+def show_game_over_screen(score):
+    while True:
+        screen.blit(bg_image, (0,0))
+        game_over_text = font.render("Game Over!", True, (200, 0 , 0))
+        score_text = font.render(f"Final Score: {score}", True, (0, 0, 0))
+        replay_text = font.render("Press SPACE tp Play Again", True, (0, 0, 0))
+        quit_text = font.render("Press Q to Quit", True, (0, 0, 0))
+        screen.blit(game_over_text, (WIDTH // 2 - 80, HEIGHT // 3))
+        screen.blit(score_text, (WIDTH // 2 - 80, HEIGHT // 3 + 40))
+        screen.blit(replay_text, (WIDTH // 2 - 140, HEIGHT // 3 + 80))
+        screen.blit(quit_text, (WIDTH // 2 - 80, HEIGHT // 3 + 120))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                cap.release()
+                cv2.destroyAllWindows()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    print("Restarting game...")
+                    return True
+                elif event.key == pygame.K_q:
+                    print("Quitting game...")
+                    pygame.quit()
+                    cap.release()
+                    cv2.destroyAllWindows()
+                    exit()
+
+while True:
+    if not run_game():
+        break
