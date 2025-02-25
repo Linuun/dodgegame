@@ -4,9 +4,6 @@ import cv2
 import mediapipe as mp
 import os
 
-from jax.jaxpr_util import primitives
-from pyrect import WIDTH, HEIGHT
-
 pygame.init()
 
 WIDTH, HEIGHT = 500, 600
@@ -47,12 +44,13 @@ def run_game():
 
     running = True
     while running:
-        screen.blit(bg_image(0, 0))
+        screen.blit(bg_image, (0, 0))
 
         ret,frame = cap.read()
         if not ret:
             print("Failed to read from camera")
             continue
+
         frame = cv2.flip(frame, 1)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -61,68 +59,71 @@ def run_game():
 
             if results.detections:
                 for detection in results.detections:
-                    bbox = detection.location_data.relative_bounding box
+                    bbox = detection.location_data.relative_bounding_box
                     face_x = int(bbox.xmin * frame.shape[1])
                     new_x = int((face_x / frame.shape[1]) * WIDTH)
 
                     player_x = int(0.5 * player_x + 0.5 * new_x)
-                frame_count += 1
 
-                if random.randint(1, 20) == 1:
-                    block_x = random.randint(0, WIDTH - block_size)
-                    block_list.append([block_x, 0])
+        frame_count += 1
 
-                for block in block_list:
-                    block[1] += block_speed
+        if random.randint(1, 20) == 1:
+            block_x = random.randint(0, WIDTH - block_size)
+            block_list.append([block_x, 0])
 
-                for block in block_list:
-                    if (player_x < block[0] < player_x + player_size or player_x < block[0] + block_size < player_x + player_size) and \ (player_y < block[1] + block_size < player_y + player_size):
-                        print("Collision detected Game Over.")
-                        return show_game_over_screen(score)
+        for block in block_list:
+            block[1] += block_speed
 
-                block_list = [block for block in block_list if block[1] < HEIGHT]
+        for block in block_list:
+            if (player_x < block[0] < player_x + player_size or player_x < block[0] + block_size < player_x + player_size) and \
+                (player_y < block[1] + block_size < player_y + player_size):
+                    print("Collision detected! Game Over.")
+                    return show_game_over_screen(score)
 
-                screen.blit(player_img, (player_x, player_y))
+        block_list = [block for block in block_list if block[1] < HEIGHT]
 
-                for block in block_list:
-                    screen.blit(block_img, (block[0], block[1]))
+        screen.blit(player_img, (player_x, player_y))
 
-                score += 1
-                score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+        for block in block_list:
+            screen.blit(block_img, (block[0], block[1]))
 
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame = cv2.transpose(frame)
-                frame_surface = pygame.surfarray.make_surface(frame)
+        score += 1
+        score_text = font.render(f"Score: {score}", True, (255, 0, 0))
+        screen.blit(score_text, (10, 10))
 
-                frame_surface = pygame.transform.scale(frame_surface, (150, 150))
-                screen.blit(frame_surface, (WIDTH - 160, 10))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.transpose(frame)
+        frame_surface = pygame.surfarray.make_surface(frame)
 
-                pygame.display.flip()
-                clock.tick(60)
+        frame_surface = pygame.transform.scale(frame_surface, (150, 150))
+        screen.blit(frame_surface, (WIDTH - 160, 10))
 
-                for event in pygame.event.get():
-                    if event_type == pygame.QUIT:
-                        pygame.quit()
-                        cap.release()
-                        cv2.destroyAllWindows()
-                        exit()
+        pygame.display.flip()
+        clock.tick(60)
 
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_q]
-                    pygame.quit()
-                    cap.release()
-                    exit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                cap.release()
+                cv2.destroyAllWindows()
+                exit()
 
-            print("Game loop ended. Restarting game...")
-            return True
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_q]:
+            pygame.quit()
+            cap.release()
+            exit()
+
+    print("Game loop ended. Restarting game...")
+    return True
 
 def show_game_over_screen(score):
     while True:
         screen.blit(bg_image, (0,0))
         game_over_text = font.render("Game Over!", True, (200, 0 , 0))
-        score_text = font.render(f"Final Score: {score}", True, (0, 0, 0))
-        replay_text = font.render("Press SPACE tp Play Again", True, (0, 0, 0))
-        quit_text = font.render("Press Q to Quit", True, (0, 0, 0))
+        score_text = font.render(f"Final Score: {score}", True, (255, 255, 255))
+        replay_text = font.render("Press SPACE to Play Again", True, (255, 255, 255))
+        quit_text = font.render("Press Q to Quit", True, (255, 255, 255))
         screen.blit(game_over_text, (WIDTH // 2 - 80, HEIGHT // 3))
         screen.blit(score_text, (WIDTH // 2 - 80, HEIGHT // 3 + 40))
         screen.blit(replay_text, (WIDTH // 2 - 140, HEIGHT // 3 + 80))
