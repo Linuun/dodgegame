@@ -1,3 +1,4 @@
+# Face-Controlled Dodge Game
 import pygame
 import random
 import cv2
@@ -31,7 +32,7 @@ block_speed = 7
 font = pygame.font.Font(None, 36)
 
 mp_face_detection = mp.solutions.face_detection
-face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
+face_detection = mp_face_detection.FaceDetection(min_detection_confidence=1)
 
 cap = cv2.VideoCapture(0)
 
